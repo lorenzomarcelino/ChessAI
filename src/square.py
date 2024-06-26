@@ -1,4 +1,3 @@
-
 class Square:
 
     ALPHACOLS = {0: 'a', 1: 'b', 2: 'c', 3: 'd', 4: 'e', 5: 'f', 6: 'g', 7: 'h'}
@@ -7,13 +6,13 @@ class Square:
         self.row = row
         self.col = col
         self.piece = piece
-        self.alphacol = self.ALPHACOLS[col]
+        self.alphacol = self.ALPHACOLS.get(col, None)
 
     def __eq__(self, other):
         return self.row == other.row and self.col == other.col
 
     def has_piece(self):
-        return self.piece != None
+        return self.piece is not None
 
     def isempty(self):
         return not self.has_piece()
@@ -38,4 +37,4 @@ class Square:
     @staticmethod
     def get_alphacol(col):
         ALPHACOLS = {0: 'a', 1: 'b', 2: 'c', 3: 'd', 4: 'e', 5: 'f', 6: 'g', 7: 'h'}
-        return ALPHACOLS[col]
+        return ALPHACOLS.get(col, '')

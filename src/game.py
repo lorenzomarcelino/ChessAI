@@ -1,5 +1,4 @@
 import pygame
-
 from const import *
 from board import Board
 from dragger import Dragger
@@ -15,71 +14,51 @@ class Game:
         self.dragger = Dragger()
         self.config = Config()
 
-    # blit methods
-
-    def show_bg(self, surface):
+    def show_bg(self, surface, cell_size, border_width, border_height):
         theme = self.config.theme
         
         for row in range(ROWS):
             for col in range(COLS):
-                # color
                 color = theme.bg.light if (row + col) % 2 == 0 else theme.bg.dark
-                # rect
-                rect = (col * SQSIZE, row * SQSIZE, SQSIZE, SQSIZE)
-                # blit
+                rect = (border_width + col * cell_size, border_height + row * cell_size, cell_size, cell_size)
                 pygame.draw.rect(surface, color, rect)
 
-                # row coordinates
                 if col == 0:
-                    # color
                     color = theme.bg.dark if row % 2 == 0 else theme.bg.light
-                    # label
                     lbl = self.config.font.render(str(ROWS-row), 1, color)
-                    lbl_pos = (5, 5 + row * SQSIZE)
-                    # blit
+                    lbl_pos = (border_width + 5, border_height + 5 + row * cell_size)
                     surface.blit(lbl, lbl_pos)
 
-                # col coordinates
                 if row == 7:
-                    # color
                     color = theme.bg.dark if (row + col) % 2 == 0 else theme.bg.light
-                    # label
                     lbl = self.config.font.render(Square.get_alphacol(col), 1, color)
-                    lbl_pos = (col * SQSIZE + SQSIZE - 20, HEIGHT - 20)
-                    # blit
+                    lbl_pos = (border_width + col * cell_size + cell_size - 20, border_height + cell_size * 8 - 20)
                     surface.blit(lbl, lbl_pos)
 
-    def show_pieces(self, surface):
+    def show_pieces(self, surface, cell_size, border_width, border_height):
         for row in range(ROWS):
             for col in range(COLS):
-                # piece ?
                 if self.board.squares[row][col].has_piece():
                     piece = self.board.squares[row][col].piece
-                    
-                    # all pieces except dragger piece
                     if piece is not self.dragger.piece:
-                        piece.set_texture(size=80)
+                        piece.set_texture(size=80)  # Tamanho das imagens ajustado para 80px
                         img = pygame.image.load(piece.texture)
-                        img_center = col * SQSIZE + SQSIZE // 2, row * SQSIZE + SQSIZE // 2
+                        img_center = border_width + col * cell_size + cell_size // 2, border_height + row * cell_size + cell_size // 2
                         piece.texture_rect = img.get_rect(center=img_center)
                         surface.blit(img, piece.texture_rect)
 
-    def show_moves(self, surface):
+    def show_moves(self, surface, cell_size, border_width, border_height):
         theme = self.config.theme
 
         if self.dragger.dragging:
             piece = self.dragger.piece
 
-            # loop all valid moves
             for move in piece.moves:
-                # color
                 color = theme.moves.light if (move.final.row + move.final.col) % 2 == 0 else theme.moves.dark
-                # rect
-                rect = (move.final.col * SQSIZE, move.final.row * SQSIZE, SQSIZE, SQSIZE)
-                # blit
+                rect = (border_width + move.final.col * cell_size, border_height + move.final.row * cell_size, cell_size, cell_size)
                 pygame.draw.rect(surface, color, rect)
 
-    def show_last_move(self, surface):
+    def show_last_move(self, surface, cell_size, border_width, border_height):
         theme = self.config.theme
 
         if self.board.last_move:
@@ -87,23 +66,15 @@ class Game:
             final = self.board.last_move.final
 
             for pos in [initial, final]:
-                # color
                 color = theme.trace.light if (pos.row + pos.col) % 2 == 0 else theme.trace.dark
-                # rect
-                rect = (pos.col * SQSIZE, pos.row * SQSIZE, SQSIZE, SQSIZE)
-                # blit
+                rect = (border_width + pos.col * cell_size, border_height + pos.row * cell_size, cell_size, cell_size)
                 pygame.draw.rect(surface, color, rect)
 
-    def show_hover(self, surface):
+    def show_hover(self, surface, cell_size, border_width, border_height):
         if self.hovered_sqr:
-            # color
             color = (180, 180, 180)
-            # rect
-            rect = (self.hovered_sqr.col * SQSIZE, self.hovered_sqr.row * SQSIZE, SQSIZE, SQSIZE)
-            # blit
+            rect = (border_width + self.hovered_sqr.col * cell_size, border_height + self.hovered_sqr.row * cell_size, cell_size, cell_size)
             pygame.draw.rect(surface, color, rect, width=3)
-
-    # other methods
 
     def next_turn(self):
         self.next_player = 'white' if self.next_player == 'black' else 'black'
@@ -122,3 +93,43 @@ class Game:
 
     def reset(self):
         self.__init__()
+
+    def check_game_over(self):
+        if self.is_checkmate():
+            return "Checkmate"
+        if self.is_stalemate():
+            return "Stalemate"
+        return None
+
+    def is_checkmate(self):
+        king = self.get_king(self.next_player)
+        if king is None:
+            return False
+
+        for row in range(ROWS):
+            for col in range(COLS):
+                if self.board.squares[row][col].has_team_piece(king.color):
+                    piece = self.board.squares[row][col].piece
+                    self.board.calc_moves(piece, row, col, bool=False)
+                    for move in piece.moves:
+                        if not self.board.would_be_in_check(piece, move):
+                            return False
+        return self.board.in_check(king.color)
+
+    def is_stalemate(self):
+        king = self.get_king(self.next_player)
+        if king is None:
+            return False
+
+        for row in range(ROWS):
+            for col in range(COLS):
+                if self.board.squares[row][col].has_team_piece(king.color):
+                    piece = self.board.squares[row][col].piece
+                    self.board.calc_moves(piece, row, col, bool=False)
+                    for move in piece.moves:
+                        if not self.board.would_be_in_check(piece, move):
+                            return False
+        return not self.board.in_check(king.color)
+
+    def get_king(self, color):
+        return self.board.get_king(color)
