@@ -94,6 +94,20 @@ class Board:
                             return True
         return False
 
+    def square_under_attack(self, row, col, by_color):
+        """Return True if the square at (row, col) is attacked by any piece of
+        ``by_color``.
+        """
+        for r in range(8):
+            for c in range(8):
+                if self.squares[r][c].has_team_piece(by_color):
+                    attacker = self.squares[r][c].piece
+                    self.calc_moves(attacker, r, c, bool=False)
+                    for move in attacker.moves:
+                        if move.final.row == row and move.final.col == col:
+                            return True
+        return False
+
     def calc_moves(self, piece, row, col, bool=True):
         def pawn_moves():
             # steps
@@ -299,10 +313,14 @@ class Board:
             ]
 
             # normal moves
+            enemy = 'black' if piece.color == 'white' else 'white'
             for possible_move in adjs:
                 possible_move_row, possible_move_col = possible_move
 
                 if Square.in_range(possible_move_row, possible_move_col):
+                    if self.square_under_attack(possible_move_row, possible_move_col, enemy):
+                        continue
+
                     target_sq = self.squares[possible_move_row][possible_move_col]
                     if target_sq.isempty() or target_sq.has_enemy_piece(piece.color):
                         target = target_sq.piece
@@ -329,12 +347,15 @@ class Board:
                 left_rook = self.squares[row][0].piece
                 if isinstance(left_rook, Rook):
                     if not left_rook.moved:
+                        enemy = 'black' if piece.color == 'white' else 'white'
                         for c in range(1, 4):
                             # castling is not possible because pieces are in between.
                             if self.squares[row][c].has_piece():
                                 break
 
                             if c == 3:
+                                if self.square_under_attack(row, 3, enemy) or self.square_under_attack(row, 2, enemy):
+                                    break
                                 # adds left rook to king
                                 piece.left_rook = left_rook
 
@@ -365,12 +386,15 @@ class Board:
                 right_rook = self.squares[row][7].piece
                 if isinstance(right_rook, Rook):
                     if not right_rook.moved:
+                        enemy = 'black' if piece.color == 'white' else 'white'
                         for c in range(5, 7):
                             # castling is not possible because pieces are in between.
                             if self.squares[row][c].has_piece():
                                 break
 
                             if c == 6:
+                                if self.square_under_attack(row, 5, enemy) or self.square_under_attack(row, 6, enemy):
+                                    break
                                 # adds right rook to king
                                 piece.right_rook = right_rook
 
