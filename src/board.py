@@ -84,15 +84,8 @@ class Board:
         if king is None:
             return False
 
-        for row in range(8):
-            for col in range(8):
-                if self.squares[row][col].has_enemy_piece(color):
-                    piece = self.squares[row][col].piece
-                    self.calc_moves(piece, row, col, bool=False)
-                    for move in piece.moves:
-                        if move.final.row == king.row and move.final.col == king.col:
-                            return True
-        return False
+        enemy = 'black' if color == 'white' else 'white'
+        return self.square_under_attack(king.row, king.col, enemy)
 
     def square_under_attack(self, row, col, by_color):
         """Return True if the square at (row, col) is attacked by any piece of

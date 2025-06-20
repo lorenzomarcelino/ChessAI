@@ -4,7 +4,7 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from board import Board
-from piece import King, Rook
+from piece import King, Rook, Bishop, Queen
 
 
 def setup_empty_board():
@@ -52,3 +52,16 @@ def test_pinned_piece_has_no_legal_moves():
     board.calc_moves(pinned_rook, 6, 4)
     allowed = [(m.final.row, m.final.col) for m in pinned_rook.moves]
     assert allowed == [(5, 4), (4, 4), (3, 4), (2, 4), (1, 4), (0, 4)]
+
+
+def test_bishop_must_capture_to_escape_check():
+    board = setup_empty_board()
+
+    board.squares[0][4].piece = King('black')
+    bishop = Bishop('black')
+    board.squares[0][2].piece = bishop
+    board.squares[2][4].piece = Queen('white')
+
+    board.calc_moves(bishop, 0, 2)
+    allowed = [(m.final.row, m.final.col) for m in bishop.moves]
+    assert allowed == [(2, 4)]
