@@ -50,4 +50,5 @@ def test_pinned_piece_has_no_legal_moves():
     board.squares[0][0].piece = King('black')
 
     board.calc_moves(pinned_rook, 6, 4)
-    assert pinned_rook.moves == []
+    allowed = [(m.final.row, m.final.col) for m in pinned_rook.moves]
+    assert allowed == [(5, 4), (4, 4), (3, 4), (2, 4), (1, 4), (0, 4)]

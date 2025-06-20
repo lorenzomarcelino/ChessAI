@@ -102,13 +102,13 @@ class Board:
             for c in range(8):
                 if self.squares[r][c].has_team_piece(by_color):
                     attacker = self.squares[r][c].piece
-                    self.calc_moves(attacker, r, c, bool=False)
+                    self.calc_moves(attacker, r, c, bool=False, for_attack=True)
                     for move in attacker.moves:
                         if move.final.row == row and move.final.col == col:
                             return True
         return False
 
-    def calc_moves(self, piece, row, col, bool=True):
+    def calc_moves(self, piece, row, col, bool=True, for_attack=False):
         def pawn_moves():
             # steps
             steps = 1 if piece.moved else 2
@@ -318,7 +318,7 @@ class Board:
                 possible_move_row, possible_move_col = possible_move
 
                 if Square.in_range(possible_move_row, possible_move_col):
-                    if self.square_under_attack(possible_move_row, possible_move_col, enemy):
+                    if not for_attack and self.square_under_attack(possible_move_row, possible_move_col, enemy):
                         continue
 
                     target_sq = self.squares[possible_move_row][possible_move_col]
@@ -342,7 +342,7 @@ class Board:
                                 piece.add_move(move)
 
             # castling moves
-            if not piece.moved:
+            if not for_attack and not piece.moved:
                 # queen castling
                 left_rook = self.squares[row][0].piece
                 if isinstance(left_rook, Rook):
