@@ -57,7 +57,7 @@ class Board:
         self.last_move = move
 
     def valid_move(self, piece, move):
-        return move in piece.moves
+        return move in piece.moves and not self.would_be_in_check(piece, move)
 
     def check_promotion(self, piece, final):
         if final.row == 0 or final.row == 7:
@@ -81,18 +81,21 @@ class Board:
         king = self.get_king(color)
         if king is None:
             return False
+        return self.is_square_attacked(king.row, king.col, color)
 
-        for row in range(8):
-            for col in range(8):
-                if self.squares[row][col].has_enemy_piece(color):
-                    piece = self.squares[row][col].piece
-                    self.calc_moves(piece, row, col, bool=False)
+    def is_square_attacked(self, row, col, defending_color):
+        for r in range(ROWS):
+            for c in range(COLS):
+                if self.squares[r][c].has_enemy_piece(defending_color):
+                    piece = self.squares[r][c].piece
+                    self.calc_moves(piece, r, c, bool=False)
                     for move in piece.moves:
-                        if move.final.row == king.row and move.final.col == king.col:
+                        if move.final.row == row and move.final.col == col:
                             return True
         return False
 
     def calc_moves(self, piece, row, col, bool=True):
+        piece.clear_moves()
         def pawn_moves():
             # steps
             steps = 1 if piece.moved else 2
@@ -331,7 +334,10 @@ class Board:
 
                                 # check potential checks
                                 if bool:
-                                    if not self.would_be_in_check(piece, moveK) and not self.would_be_in_check(left_rook, moveR):
+                                    if (not self.in_check(piece.color)
+                                            and not self.is_square_attacked(row, col - 1, piece.color)
+                                            and not self.would_be_in_check(piece, moveK)
+                                            and not self.would_be_in_check(left_rook, moveR)):
                                         # append new move to rook
                                         left_rook.add_move(moveR)
                                         # append new move to king
@@ -367,7 +373,10 @@ class Board:
 
                                 # check potential checks
                                 if bool:
-                                    if not self.would_be_in_check(piece, moveK) and not self.would_be_in_check(right_rook, moveR):
+                                    if (not self.in_check(piece.color)
+                                            and not self.is_square_attacked(row, col + 1, piece.color)
+                                            and not self.would_be_in_check(piece, moveK)
+                                            and not self.would_be_in_check(right_rook, moveR)):
                                         # append new move to rook
                                         right_rook.add_move(moveR)
                                         # append new move to king
