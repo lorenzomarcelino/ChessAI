@@ -1,6 +1,8 @@
 import pygame
 
-DEFAULT_WINDOW_SIZE = (1000, 720)
+from config import s
+
+DEFAULT_WINDOW_SIZE = (s(1040), s(860))
 
 
 class Display:

@@ -1,15 +1,62 @@
+import sys
+import ctypes
 import pygame
 
-APP_BG = (49, 46, 43)
-SIDEBAR_BG = (62, 59, 56)
-SIDEBAR_TEXT = (210, 210, 210)
-SIDEBAR_MUTED = (150, 150, 150)
-SIDEBAR_HIGHLIGHT = (80, 77, 74)
-PLAYER_BAR_BG = (62, 59, 56)
-TIMER_INACTIVE_BG = (72, 69, 66)
-TIMER_INACTIVE_TEXT = (150, 150, 150)
+APP_BG = (32, 30, 28)
+SIDEBAR_BG = (48, 46, 43)
+SIDEBAR_TEXT = (255, 255, 255)
+SIDEBAR_MUTED = (181, 178, 174)
+SIDEBAR_HIGHLIGHT = (72, 69, 66)
+PLAYER_BAR_BG = (48, 46, 43)
+TIMER_INACTIVE_BG = (57, 54, 51)
+TIMER_INACTIVE_TEXT = (181, 178, 174)
 TIMER_ACTIVE_BG = (30, 30, 30)
 TIMER_ACTIVE_TEXT = (255, 255, 255)
+BUTTON_BG = (48, 46, 43)
+BUTTON_BG_HOVER = (62, 59, 56)
+BUTTON_BG_SELECTED = (57, 54, 51)
+BUTTON_BORDER = (129, 182, 76)
+BUTTON_BORDER_HOVER = (90, 87, 84)
+PLAY_GREEN = (129, 182, 76)
+PLAY_GREEN_HOVER = (149, 196, 98)
+PLAY_GREEN_SHADOW = (92, 133, 52)
+TEXT_WHITE = (255, 255, 255)
+SIDE_WHITE_BG = (232, 232, 230)
+SIDE_BLACK_BG = (57, 54, 51)
+
+_FONT_NAMES = 'segoeui,Segoe UI,calibri,Calibri,arial,Arial,dejavusans,sans'
+
+
+def _dpi_scale():
+    if sys.platform != 'win32':
+        return 1.0
+    try:
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)
+        return max(1.0, ctypes.windll.user32.GetDpiForSystem() / 96.0)
+    except Exception:
+        try:
+            ctypes.windll.user32.SetProcessDPIAware()
+        except Exception:
+            pass
+        return 1.0
+
+
+DPI_SCALE = _dpi_scale()
+
+
+def s(value):
+    return max(1, int(round(value * DPI_SCALE)))
+
+
+def load_font(size, bold=False):
+    px = s(size)
+    try:
+        font = pygame.font.SysFont(_FONT_NAMES, px, bold=bold)
+        if font is not None:
+            return font
+    except Exception:
+        pass
+    return pygame.font.Font(None, px)
 
 
 class Bg:
@@ -54,12 +101,12 @@ class Config:
 
     def __init__(self, theme_idx=0):
         self.themes = BOARD_THEMES
-        self.font = pygame.font.Font(None, 22)
-        self.sidebar_font = pygame.font.Font(None, 24)
-        self.sidebar_title_font = pygame.font.Font(None, 28)
-        self.player_font = pygame.font.Font(None, 26)
-        self.timer_font = pygame.font.Font(None, 32)
-        self.timer_font_active = pygame.font.Font(None, 34)
+        self.font = load_font(16, bold=True)
+        self.sidebar_font = load_font(18, bold=True)
+        self.sidebar_title_font = load_font(22, bold=True)
+        self.player_font = load_font(20, bold=True)
+        self.timer_font = load_font(22, bold=True)
+        self.timer_font_active = load_font(24, bold=True)
         self.idx = theme_idx
         self.theme = self.themes[self.idx]
         self.move_sound = pygame.mixer.Sound('assets/sounds/move.wav')

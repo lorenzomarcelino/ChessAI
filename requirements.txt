@@ -1,0 +1,7 @@
+pygame>=2.5
+python-chess>=1.10
+pytest>=8.0
+numpy>=1.24
+torch>=2.0
+zstandard>=0.22
+
